@@ -38,7 +38,7 @@ const Counter = () => {
             console.log("Connected to WebSocket server");
         });
         socket.on("counterUpdated", (data) => {
-            if(data.resetCount) {
+            if (data.resetCount) {
                 setFirstLoad(true);
             }
 
@@ -46,10 +46,12 @@ const Counter = () => {
 
             setData((prevData) =>
                 prevData
-                    ? { ...prevData, allTimeHigh: data.allTimeHigh ? data.allTimeHigh : prevData.allTimeHigh,
+                    ? {
+                        ...prevData, allTimeHigh: data.allTimeHigh ? data.allTimeHigh : prevData.allTimeHigh,
                         playerCount: data.playerCount ? data.playerCount : prevData.playerCount,
                         resetCount: data.resetCount ? data.resetCount : prevData.resetCount,
-                        regretCount: data.regretCount ? data.regretCount : prevData.regretCount }
+                        regretCount: data.regretCount ? data.regretCount : prevData.regretCount
+                    }
                     : null
             );
         });
@@ -72,21 +74,30 @@ const Counter = () => {
                 },
             });
             const data = await response.json();
-            if (data && typeof data === 'object' && '_id' in data && 'count' in data) {
-                setData(data as Data);
-                setId((data as Data)._id);
-                setCounter((data as Data).count);
+            if (data) {
+                console.log("Fetched counter data:", data);
+                setData(data);
+                setId(data._id);
+                setCounter(data.count);
             }
 
             //* If no data is found, create a new counter with count 0
-            if (data == null) {
-                await fetch('/api/counter', {
+            if (!data || Object.keys(data).length === 0) {
+                const res = await fetch('/api/counter', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 });
-                fetchData();
+
+                const created = await res.json();
+
+                if (created && '_id' in created) {
+                    console.log("Created new counter:", created);
+                    setData(created);
+                    setId(created._id);
+                    setCounter(created.count);
+                }
             }
         };
         fetchData();

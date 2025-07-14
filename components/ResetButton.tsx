@@ -46,7 +46,6 @@ const ResetButton = ({ counter, counterData }: { counter: number, counterData: D
     const [confirmDialog, setConfirmDialog] = useState(false);
     const [regretDialog, setRegretDialog] = useState(false);
     const [confirmAgain, setConfirmAgain] = useState(false);
-    console.log(counterData);
 
     
 
@@ -54,7 +53,6 @@ const ResetButton = ({ counter, counterData }: { counter: number, counterData: D
     //* Function to handle resetting the counter
     //* It sends a PUT request to the server with the updated count set to 0
     const handleReset = async () => {
-        console.log(counterData);
         socket.emit("reset", counterData?._id);
     }
 

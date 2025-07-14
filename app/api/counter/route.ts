@@ -14,8 +14,15 @@ export async function GET() {
 }
 export async function POST() {
   try {
-    const newCounter = new Counter();
+    const newCounter = new Counter({
+      count: 0,
+      playerCount: 0,
+      resetCount: 0,
+      allTimeHigh: 0,
+      regretCount: 0,
+    });
     await newCounter.save();
+
     return new Response(JSON.stringify(newCounter), { status: 201 });
   } catch (error) {
     console.error("Error creating counter:", error);
@@ -23,9 +30,7 @@ export async function POST() {
   }
 }
 
-
 // * Not Needed as the increment is handled by the WebSocket server
-
 
 // export async function PUT(request: Request) {
 //   try {
