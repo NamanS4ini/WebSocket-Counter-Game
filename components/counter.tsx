@@ -72,13 +72,15 @@ const Counter = () => {
                 },
             });
             const data = await response.json();
-            data && setData(data);
-            data && setId(data._id);
-            data && setCounter(data.count);
+            if (data && typeof data === 'object' && '_id' in data && 'count' in data) {
+                setData(data as Data);
+                setId((data as Data)._id);
+                setCounter((data as Data).count);
+            }
 
             //* If no data is found, create a new counter with count 0
             if (data == null) {
-                const response = await fetch('/api/counter', {
+                await fetch('/api/counter', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

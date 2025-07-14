@@ -3,7 +3,7 @@ import { Counter } from "@/lib/counterSchema";
 
 connectDB();
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const counters = await Counter.findOne({});
     return new Response(JSON.stringify(counters), { status: 200 });

@@ -10,14 +10,15 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import { TransitionProps } from '@mui/material/transitions';
 import Slide from '@mui/material/Slide';
+import { JSXElementConstructor } from 'react';
 import socket from '../lib/socketClient';
 
 
 const Transition = React.forwardRef(function Transition(
     props: TransitionProps & {
-        children: React.ReactElement<any, any>;
+        children: React.ReactElement<unknown, string | JSXElementConstructor<unknown>>;
     },
-    ref: React.Ref<unknown>,
+    ref: React.Ref<unknown>
 ) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -32,7 +33,16 @@ const darkTheme = createTheme({
     },
 });
 
-const ResetButton = ({ counter, counterData }: { counter: number, counterData: any }) => {
+interface Data {
+    _id: string;
+    count: number;
+    allTimeHigh: number;
+    playerCount: number;
+    resetCount: number;
+    regretCount: number;
+}
+
+const ResetButton = ({ counter, counterData }: { counter: number, counterData: Data | null }) => {
     const [confirmDialog, setConfirmDialog] = useState(false);
     const [regretDialog, setRegretDialog] = useState(false);
     const [confirmAgain, setConfirmAgain] = useState(false);
@@ -45,7 +55,7 @@ const ResetButton = ({ counter, counterData }: { counter: number, counterData: a
     //* It sends a PUT request to the server with the updated count set to 0
     const handleReset = async () => {
         console.log(counterData);
-        socket.emit("reset", counterData._id);
+        socket.emit("reset", counterData?._id);
     }
 
 
@@ -55,7 +65,7 @@ const ResetButton = ({ counter, counterData }: { counter: number, counterData: a
     const handleRegret = async () => {
 
         setConfirmAgain(false);
-        socket.emit("regret", counterData._id);
+        socket.emit("regret", counterData?._id);
         setRegretDialog(false);
         setConfirmDialog(false);
 
@@ -136,7 +146,7 @@ const ResetButton = ({ counter, counterData }: { counter: number, counterData: a
                             <span className='font-bold text-red-500'>{(counterData?.playerCount || 0)}</span> people tried their best to make the counter reach <span className='font-bold text-green-500'>{counter}</span>
                         </DialogContentText>
                         <DialogContentText id="alert-dialog-slide-description">
-                            <span className='font-bold text-red-500'>{((counterData?.regretCount / counterData?.resetCount * 100) || 0).toFixed(2)}%</span> of the people who reset the counter, regretted it.
+                            <span className='font-bold text-red-500'>{(counterData ? ((counterData?.regretCount / counterData?.resetCount * 100) || 0).toFixed(2) : 0)}%</span> of the people who reset the counter, regretted it.
                         </DialogContentText>
                     </DialogContent>
                     <div className='flex justify-center gap-4'>
