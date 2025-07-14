@@ -2,37 +2,62 @@
 import React, { useEffect, useState } from 'react'
 import { Button } from '@mui/material';
 import ResetButton from './ResetButton';
+import socket from '../lib/socketClient';
 
 interface Data {
     _id: string;
     count: number;
     allTimeHigh: number;
+    playerCount: number;
     resetCount: number;
     regretCount: number;
 }
 
 const Counter = () => {
     const [counter, setCounter] = useState(0);
-    const [firstLoad, setFirstLoad] = useState<boolean | null>(null);
+    const [firstLoad, setFirstLoad] = useState<boolean>(true);
     const [data, setData] = useState<null | Data>(null);
     const [id, setId] = useState('');
 
     //* Function to handle incrementing the counter
     //* It sends a PUT request to the server with the updated count
     const handleIncrement = async () => {
-        const res = await fetch('/api/counter', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, firstLoad }),
-        });
-        const data = await res.json();
-        setCounter(data.count);
+        if (!id) return; // Ensure id is set before emitting
+        //* Emit the increment event to the WebSocket server
+        socket.emit("increment", id);
         if (firstLoad) {
-            localStorage.setItem('firstLoad', 'false');
             setFirstLoad(false);
+            socket.emit("firstLoad", id);
         }
-        setData(data);
     };
+
+
+    useEffect(() => {
+        //* Set up a WebSocket connection to listen for counter updates
+        socket.on("connect", () => {
+            console.log("Connected to WebSocket server");
+        });
+        socket.on("counterUpdated", (data) => {
+            if(data.resetCount) {
+                setFirstLoad(true);
+            }
+
+            setCounter(data.count);
+
+            setData((prevData) =>
+                prevData
+                    ? { ...prevData, allTimeHigh: data.allTimeHigh ? data.allTimeHigh : prevData.allTimeHigh,
+                        playerCount: data.playerCount ? data.playerCount : prevData.playerCount,
+                        resetCount: data.resetCount ? data.resetCount : prevData.resetCount,
+                        regretCount: data.regretCount ? data.regretCount : prevData.regretCount }
+                    : null
+            );
+        });
+        return () => {
+            socket.off("connect");
+            socket.off("counterUpdated");
+        }
+    }, []);
 
 
 
@@ -63,13 +88,6 @@ const Counter = () => {
             }
         };
         fetchData();
-        if (localStorage.getItem('firstLoad') === null) {
-            localStorage.setItem('firstLoad', 'true');
-            setFirstLoad(true);
-        }
-        else {
-            setFirstLoad(localStorage.getItem('firstLoad') === 'true');
-        }
     }, []);
 
 
@@ -90,7 +108,7 @@ const Counter = () => {
                     </Button>
                 </div>
                 <div>
-                    <ResetButton counter={counter} setCounter={setCounter} counterData={data} setCounterData={setData} />
+                    <ResetButton counter={counter} counterData={data} />
                 </div>
             </div>
         </div>

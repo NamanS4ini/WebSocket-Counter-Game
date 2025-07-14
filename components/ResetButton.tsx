@@ -10,6 +10,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import { TransitionProps } from '@mui/material/transitions';
 import Slide from '@mui/material/Slide';
+import socket from '../lib/socketClient';
 
 
 const Transition = React.forwardRef(function Transition(
@@ -31,43 +32,30 @@ const darkTheme = createTheme({
     },
 });
 
-const ResetButton = ({ setCounter, counter, counterData, setCounterData }: { setCounter: React.Dispatch<React.SetStateAction<number>>, counter: number, counterData: any, setCounterData: React.Dispatch<React.SetStateAction<any>> }) => {
+const ResetButton = ({ counter, counterData }: { counter: number, counterData: any }) => {
     const [confirmDialog, setConfirmDialog] = useState(false);
     const [regretDialog, setRegretDialog] = useState(false);
     const [confirmAgain, setConfirmAgain] = useState(false);
+    console.log(counterData);
+
+    
 
 
     //* Function to handle resetting the counter
     //* It sends a PUT request to the server with the updated count set to 0
     const handleReset = async () => {
         console.log(counterData);
-        const response = await fetch('/api/counter', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: counterData._id, reset: true }),
-        });
-        const data = await response.json();
-        setCounter(data.count);
-        setCounterData(data);
+        socket.emit("reset", counterData._id);
     }
+
+
 
     //* Function to handle regret action
     //* It sends a PUT request to the server to increment the regret count
     const handleRegret = async () => {
 
         setConfirmAgain(false);
-        const response = await fetch('/api/counter', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: counterData._id, regret: true }),
-        });
-        const data = await response.json();
-        console.log(data);
-        setCounterData(data);
+        socket.emit("regret", counterData._id);
         setRegretDialog(false);
         setConfirmDialog(false);
 
